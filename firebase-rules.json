@@ -1,0 +1,102 @@
+{
+  "rules": {
+    "childrensDay": {
+      "approved": {
+        ".read": true,
+        "$id": {
+          ".write": "(auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2') || (!data.exists() && newData.exists())",
+          ".validate": "newData.hasChildren(['t','x','ts']) && (newData.child('ts').val() === now || (auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2')) && (newData.child('t').val() === 'أمنية' || newData.child('t').val() === 'حق أطالب به' || newData.child('t').val() === 'رسالة') && newData.child('x').isString() && newData.child('x').val().length >= 8 && newData.child('x').val().length <= 240 && (!newData.hasChild('n') || (newData.child('n').isString() && newData.child('n').val().length <= 20))",
+          "n": {},
+          "t": {},
+          "x": {},
+          "ts": {},
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "pending": {
+        ".read": "auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2'",
+        "$id": {
+          ".write": "(auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2') || (!data.exists() && newData.exists())",
+          ".validate": "newData.hasChildren(['t','x','ts']) && (newData.child('ts').val() === now || (auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2')) && (newData.child('t').val() === 'أمنية' || newData.child('t').val() === 'حق أطالب به' || newData.child('t').val() === 'رسالة') && newData.child('x').isString() && newData.child('x').val().length >= 8 && newData.child('x').val().length <= 240 && (!newData.hasChild('n') || (newData.child('n').isString() && newData.child('n').val().length <= 20))",
+          "n": {},
+          "t": {},
+          "x": {},
+          "ts": {},
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "voices": {
+        ".read": "auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2'",
+        "$id": {
+          ".write": "(auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2') || (!data.exists() && newData.exists())",
+          ".validate": "newData.hasChildren(['q','x','ts']) && newData.child('ts').val() === now && newData.child('q').isNumber() && newData.child('q').val() >= 0 && newData.child('q').val() <= 2 && newData.child('x').isString() && newData.child('x').val().length >= 5 && newData.child('x').val().length <= 300",
+          "q": {},
+          "x": {},
+          "ts": {},
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "reports": {
+        ".read": "auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2'",
+        "$wid": {
+          ".write": "auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2'",
+          ".validate": "$wid.length <= 30",
+          "$rid": {
+            ".write": "(auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2') || (!data.exists() && newData.exists())",
+            ".validate": "newData.hasChild('ts') && (newData.child('ts').val() === now || (auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2')) && $rid.matches(/^[a-z0-9]{8,24}$/)",
+            "ts": {},
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "messages": {
+        ".read": true,
+        "$id": {
+          ".write": "auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2'",
+          ".validate": "newData.hasChildren(['x','ts']) && newData.child('x').isString() && newData.child('x').val().length >= 5 && newData.child('x').val().length <= 400 && newData.child('ts').isNumber() && (!newData.hasChild('n') || (newData.child('n').isString() && newData.child('n').val().length <= 40))",
+          "x": {},
+          "n": {},
+          "ts": {},
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "gallery": {
+        ".read": true,
+        "$id": {
+          ".write": "auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2'",
+          ".validate": "newData.hasChildren(['src','ts']) && newData.child('src').isString() && newData.child('src').val().matches(/^data:image\\/(jpeg|png|webp);base64,/) && newData.child('src').val().length <= 600000 && newData.child('ts').isNumber() && (!newData.hasChild('t') || (newData.child('t').isString() && newData.child('t').val().length <= 80))",
+          "src": {},
+          "t": {},
+          "ts": {},
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "dreams": {
+        ".read": true,
+        "$id": {
+          ".write": "auth != null && auth.uid === 'vlrOshxTgGXOtgJVP2tkzwLmlYg2'",
+          ".validate": "newData.hasChildren(['t','src','ts']) && newData.child('t').isString() && newData.child('t').val().length >= 1 && newData.child('t').val().length <= 60 && newData.child('src').isString() && newData.child('src').val().matches(/^data:image\\/(jpeg|png|webp);base64,/) && newData.child('src').val().length <= 600000 && newData.child('ts').isNumber() && (!newData.hasChild('p') || (newData.child('p').isString() && newData.child('p').val().length <= 160))",
+          "t": {},
+          "p": {},
+          "src": {},
+          "ts": {},
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>لوحة المشرف | طفولتي حقي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--v:#6B3DF5;--vd:#4A24C9;--lav:#F2ECFF;--l2:#E4D9FF;--ink:#2A1B5E;--y:#FFC83D;--pk:#FF7EB6}
+*{box-sizing:border-box;margin:0}
+body{font-family:Tajawal,'Segoe UI',Tahoma,sans-serif;background:var(--lav);color:var(--ink);line-height:1.8;min-height:100vh}
+header{background:var(--v);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+header h1{font-size:19px}
+main{max-width:860px;margin:24px auto;padding:0 16px}
+.card{background:#fff;border-radius:22px;padding:20px 22px;box-shadow:0 12px 28px -16px rgba(74,36,201,.4);margin-bottom:14px}
+label{display:block;font-weight:700;margin:10px 0 4px}
+input{width:100%;border:2px solid var(--l2);border-radius:14px;padding:11px 14px;font:inherit;min-height:46px}
+input:focus{border-color:var(--v);outline:0}
+button{font:inherit;border:0;border-radius:999px;padding:9px 20px;font-weight:700;cursor:pointer;min-height:44px}
+.pri{background:var(--v);color:#fff}.pri:hover{background:var(--vd)}
+.ok{background:#4FD6A5;color:var(--ink)}.no{background:var(--pk);color:var(--ink)}.gh{background:var(--l2);color:var(--ink)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tabs button{background:#fff;color:var(--ink);border:2px solid var(--l2)}.tabs button.on{background:var(--v);color:#fff;border-color:var(--v)}
+.meta{font-size:13.5px;color:#6a5f8f;margin-bottom:4px}
+.txt{font-size:17px;white-space:pre-wrap;word-break:break-word;margin:6px 0 12px}
+.act{display:flex;gap:8px;flex-wrap:wrap}
+.empty{text-align:center;color:#6a5f8f;padding:30px}
+.err{color:#c0206a;font-weight:700;margin-top:8px}
+textarea{width:100%;border:2px solid var(--l2);border-radius:14px;padding:11px 14px;font:inherit;min-height:100px;resize:vertical}
+textarea:focus{border-color:var(--v);outline:0}
+.thumb{width:100%;max-height:260px;object-fit:contain;background:var(--lav);border-radius:14px;margin:6px 0 12px;display:block}
+.hintx{font-size:13px;color:#6a5f8f;margin-top:4px}
+dialog{border:0;border-radius:24px;padding:26px 24px 22px;max-width:380px;width:calc(100% - 32px);text-align:center;color:var(--ink);box-shadow:0 30px 80px -20px rgba(42,27,94,.6)}
+dialog::backdrop{background:rgba(42,27,94,.55)}
+dialog p{font-size:18px;font-weight:700;margin-bottom:18px}
+dialog .act{justify-content:center}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>لوحة المشرف — طفولتي حقي</h1><button class="gh" id="out" hidden>تسجيل الخروج</button></header>
+<main>
+  <p class="card" id="cfgwarn" hidden>لم تُضبط إعدادات Firebase بعد. الصقها في <b>FIREBASE_CONFIG</b> داخل هذا الملف.</p>
+  <form class="card" id="login" hidden>
+    <h2 style="font-size:20px">تسجيل دخول المشرف</h2>
+    <label for="em">البريد الإلكتروني</label><input id="em" type="email" autocomplete="username" required>
+    <label for="pw">كلمة المرور</label><input id="pw" type="password" autocomplete="current-password" required>
+    <button class="pri" style="margin-top:14px">دخول</button><div class="err" id="lerr"></div>
+  </form>
+  <section id="panel" hidden>
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>
+  </section>
+</main>
+<dialog id="ask"><p id="askP"></p><div class="act"><button class="no" id="askOk">نعم</button><button class="gh" id="askNo">إلغاء</button></div></dialog>
+<script type="module">
+/* الصق نفس إعدادات Firebase المستخدمة في index.html */
+const FIREBASE_CONFIG={apiKey:"AIzaSyCHV61BBUBqmWbspnLhS1yMOl1Y67VMjFY",authDomain:"childrens-day-gaza.firebaseapp.com",databaseURL:"https://childrens-day-gaza-default-rtdb.europe-west1.firebasedatabase.app",projectId:"childrens-day-gaza",storageBucket:"childrens-day-gaza.firebasestorage.app",messagingSenderId:"514407249652",appId:"1:514407249652:web:d9a2b88394afbd3b54d0a1"};
+const SDK='https://www.gstatic.com/firebasejs/10.14.1/',B='childrensDay';
+const QS=['ما الشيء الذي تتمنى تغييره في مدرستك؟','ما الذي يحتاجه كل طفل ليعيش بكرامة؟','ما رسالتك للعالم بمناسبة يوم الطفل؟'];
+const $=s=>document.querySelector(s);
+// نافذة تأكيد من الموقع نفسه (info=1 لرسالة تنبيه بزر واحد)
+function ask(msg,info){return new Promise(res=>{const d=$('#ask');$('#askP').textContent=msg;let v=false;
+  $('#askOk').textContent=info?'حسناً':'نعم';$('#askOk').className=info?'pri':'no';$('#askNo').hidden=!!info;
+  $('#askOk').onclick=()=>{v=true;d.close()};$('#askNo').onclick=()=>d.close();
+  d.onclose=()=>{d.onclose=null;res(v)};d.showModal()})}
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}; // textContent فقط: لا تُنفَّذ أكواد من المشاركات
+if(!FIREBASE_CONFIG.apiKey){$('#cfgwarn').hidden=false}
+else try{
+  const {initializeApp}=await import(SDK+'firebase-app.js');
+  const {getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=await import(SDK+'firebase-auth.js');
+  const {getDatabase,ref,onValue,update,remove,push,serverTimestamp}=await import(SDK+'firebase-database.js');
+  const app=initializeApp(FIREBASE_CONFIG),auth=getAuth(app),db=getDatabase(app);
+  let tab='pending',data={pending:{},approved:{},voices:{},reports:{},messages:{},gallery:{},dreams:{}},unsub=[];
+  const fmt=ts=>ts?new Date(ts).toLocaleString('ar-EG',{dateStyle:'medium',timeStyle:'short'}):'';
+  const TABS=[['pending','قيد المراجعة'],['approved','المنشورة'],['voices','أصوات الطلبة (خاصة)'],['reports','بلاغات 🚩'],['messages','رسائل من القلب'],['gallery','معرض الإبداعات'],['dreams','أحلام الطلبة']];
+  function drawTabs(){const t=$('#tabs');t.replaceChildren();TABS.forEach(([k,l])=>{const n=Object.keys(data[k]).length;const b=el('button',k===tab?'on':'',`${l} (${n})`);b.onclick=()=>{tab=k;drawTabs();draw()};t.append(b)})}
+  const run=async(fn,msg)=>{try{await fn()}catch(e){ask(msg||'فشلت العملية. تأكد من الصلاحيات.',1)}};
+  function drawReports(){
+    const L=$('#list');L.replaceChildren();const R=data.reports;
+    const ids=Object.keys(R).sort((a,b)=>Object.keys(R[b]).length-Object.keys(R[a]).length);
+    if(!ids.length){L.append(el('div','card empty','لا توجد بلاغات.'));return}
+    ids.forEach(id=>{const n=Object.keys(R[id]).length,v=data.approved[id],c=el('div','card');
+      c.append(el('div','meta',`${n} بلاغ`+(v?` • ${v.t} • ${v.n||'بدون لقب'}`:' • المشاركة لم تعد منشورة')));
+      c.append(el('div','txt',v?v.x:'—'));const a=el('div','act');
+      if(v){
+        const d=el('button','no','حذف المشاركة');d.onclick=async()=>{if(await ask('حذف نهائي؟'))run(()=>update(ref(db,B),{[`approved/${id}`]:null,[`reports/${id}`]:null}))};a.append(d);
+        const u=el('button','gh','إلغاء النشر');u.onclick=()=>run(()=>update(ref(db,B),{[`pending/${id}`]:{n:v.n||'',t:v.t,x:v.x,ts:v.ts},[`approved/${id}`]:null,[`reports/${id}`]:null}));a.append(u)}
+      const ig=el('button','ok','تجاهل البلاغات');ig.onclick=()=>run(()=>remove(ref(db,`${B}/reports/${id}`)));a.append(ig);
+      c.append(a);L.append(c)})}
+
+  function sortedIds(k){return Object.keys(data[k]).sort((a,b)=>(data[k][b].ts||0)-(data[k][a].ts||0))}
+  // تنزيل نسخة سريعة (صور + ملف بيانات) لتوضع مع ملفات الموقع
+  function exportCard(){
+    const c=el('div','card');c.append(el('h2','', 'النسخة السريعة للموقع'));c.firstChild.style.fontSize='19px';
+    c.append(el('div','hintx','تنزّل صور المعرض والأحلام كملفات داخل مجلد content. انسخه بجانب index.html وارفعه مع الموقع فتظهر الصور أسرع.'));
+    const b=el('button','gh','تنزيل النسخة السريعة');b.style.marginTop='10px';const e=el('div','err');
+    b.onclick=async()=>{e.textContent='';b.disabled=true;b.textContent='جارٍ التجهيز...';
+      try{
+        if(!window.JSZip)await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=ok;s.onerror=no;document.head.append(s)});
+        const z=new JSZip(),out={gallery:[],dreams:[]};
+        const ext=u=>(u.match(/^data:image\/(\w+)/)||[])[1]==='png'?'png':(u.match(/^data:image\/(\w+)/)||[])[1]==='webp'?'webp':'jpg';
+        for(const [k,pre] of [['gallery','g'],['dreams','d']]){
+          const ids=sortedIds(k);
+          for(let i=0;i<ids.length;i++){const v=data[k][ids[i]];if(typeof v.src!=='string'||!v.src.startsWith('data:image/'))continue;
+            const f=`content/${k}/${pre}${i+1}.${ext(v.src)}`;z.file(f,await (await fetch(v.src)).blob());
+            out[k].push(k==='dreams'?{t:v.t||'',p:v.p||'',src:f}:{t:v.t||'',src:f})}}
+        z.file('content/content.js','window.LOCAL_CONTENT='+JSON.stringify(out,null,1)+';\n');
+        const blob=await z.generateAsync({type:'blob'});const u=URL.createObjectURL(blob);
+        const a=document.createElement('a');a.href=u;a.download='content.zip';a.click();setTimeout(()=>URL.revokeObjectURL(u),4000);
+      }catch(x){e.textContent='تعذّر التجهيز. تأكد من اتصال الإنترنت ثم أعد المحاولة.'}
+      b.disabled=false;b.textContent='تنزيل النسخة السريعة'};
+    c.append(b,e);return c}
+  function drawMessages(){
+    const L=$('#list');L.replaceChildren();
+    const f=el('div','card');f.append(el('h2','', 'إضافة رسالة جديدة'));f.firstChild.style.fontSize='19px';
+    const l1=el('label','', 'نص الرسالة (رسالة تضامن وأمل إلى أطفال العالم)');l1.htmlFor='mtx';
+    const ta=document.createElement('textarea');ta.id='mtx';ta.maxLength=400;
+    const l2=el('label','', 'اسم الكاتب/ة أو الجهة (اختياري)');l2.htmlFor='mnm';
+    const nm=document.createElement('input');nm.id='mnm';nm.maxLength=40;nm.placeholder='مثال: طلبة الصف العاشر';
+    const err=el('div','err');const add=el('button','pri','نشر الرسالة');add.style.marginTop='14px';
+    add.onclick=()=>{err.textContent='';const x=ta.value.trim();if(x.length<5){err.textContent='اكتب رسالة من ٥ أحرف على الأقل.';return}
+      run(async()=>{const d={x,ts:serverTimestamp()};if(nm.value.trim())d.n=nm.value.trim();await push(ref(db,`${B}/messages`),d);ta.value='';nm.value=''})};
+    f.append(l1,ta,l2,nm,add,err);L.append(f);
+    const ids=sortedIds('messages');
+    if(!ids.length)L.append(el('div','card empty','لا توجد رسائل مضافة بعد. تظهر في الموقع رسائل أساسية إلى أن تضيف رسائلك.'));
+    ids.forEach(id=>{const v=data.messages[id],c=el('div','card');
+      c.append(el('div','meta',`${v.n||'بدون اسم'} • ${fmt(v.ts)}`));c.append(el('div','txt',v.x));
+      const a=el('div','act');const d=el('button','no','حذف');d.onclick=async()=>{if(await ask('حذف هذه الرسالة؟'))run(()=>remove(ref(db,`${B}/messages/${id}`)))};a.append(d);c.append(a);L.append(c)})}
+  // تصغير الصورة قبل الحفظ كي لا تثقل الموقع
+  async function shrink(file){
+    const url=URL.createObjectURL(file);
+    try{const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('bad'));i.src=url});
+      let max=1200,q=.82,out='';
+      for(let n=0;n<6;n++){const r=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+        const cv=document.createElement('canvas');cv.width=Math.round(img.naturalWidth*r);cv.height=Math.round(img.naturalHeight*r);
+        const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);
+        out=cv.toDataURL('image/jpeg',q);if(out.length<=450000)return out;max=Math.round(max*.8);q=Math.max(.6,q-.05)}
+      throw new Error('big')}
+    finally{URL.revokeObjectURL(url)}}
+  function drawGallery(){
+    const L=$('#list');L.replaceChildren();
+    const f=el('div','card');f.append(el('h2','', 'إضافة صور إلى معرض الإبداعات'));f.firstChild.style.fontSize='19px';
+    const l1=el('label','', 'اختر صورة أو أكثر');l1.htmlFor='gfile';
+    const fi=document.createElement('input');fi.type='file';fi.id='gfile';fi.accept='image/*';fi.multiple=true;
+    const l2=el('label','', 'عنوان العمل (اختياري، يُطبَّق على كل الصور المختارة)');l2.htmlFor='gt';
+    const ti=document.createElement('input');ti.id='gt';ti.maxLength=80;ti.placeholder='مثال: رسمة: عالم بلا خوف — اسم الطالب/ة';
+    const err=el('div','err');const add=el('button','pri','رفع ونشر');add.style.marginTop='14px';
+    f.append(l1,fi,l2,ti,el('div','hintx','تُصغَّر الصور تلقائياً قبل الرفع.'),add,err);L.append(f);L.append(exportCard());
+    add.onclick=async()=>{err.textContent='';const files=[...fi.files];if(!files.length){err.textContent='اختر صورة أولاً.';return}
+      add.disabled=true;let ok=0,bad=0;
+      for(const file of files){add.textContent=`جارٍ الرفع (${ok+bad+1}/${files.length})...`;
+        try{const src=await shrink(file);const d={src,ts:serverTimestamp()};if(ti.value.trim())d.t=ti.value.trim();
+          await push(ref(db,`${B}/gallery`),d);ok++}catch(e){bad++}}
+      add.disabled=false;add.textContent='رفع ونشر';fi.value='';if(ok)ti.value='';
+      if(bad)err.textContent=`تعذّر رفع ${bad} من الصور (تأكد أنها صور صالحة، وأنك حدّثت قواعد Firebase).`}
+    const ids=sortedIds('gallery');
+    if(!ids.length)L.append(el('div','card empty','لا توجد صور في المعرض بعد.'));
+    ids.forEach(id=>{const v=data.gallery[id],c=el('div','card');
+      c.append(el('div','meta',`${v.t||'بدون عنوان'} • ${fmt(v.ts)}`));
+      const im=document.createElement('img');im.className='thumb';im.src=v.src;im.alt=v.t||'';c.append(im);
+      const a=el('div','act');const d=el('button','no','حذف');d.onclick=async()=>{if(await ask('حذف هذه الصورة؟'))run(()=>remove(ref(db,`${B}/gallery/${id}`)))};a.append(d);c.append(a);L.append(c)})}
+  function drawDreams(){
+    const L=$('#list');L.replaceChildren();
+    const f=el('div','card');f.append(el('h2','', 'إضافة حلم جديد (بصورة)'));f.firstChild.style.fontSize='19px';
+    const l0=el('label','', 'صورة الحلم');l0.htmlFor='dfile';
+    const fi=document.createElement('input');fi.type='file';fi.id='dfile';fi.accept='image/*';
+    const l1=el('label','', 'العنوان (مثال: طبيبة المستقبل)');l1.htmlFor='dt';
+    const ti=document.createElement('input');ti.id='dt';ti.maxLength=60;
+    const l2=el('label','', 'جملة قصيرة عن الحلم (اختياري)');l2.htmlFor='dp';
+    const pi=document.createElement('input');pi.id='dp';pi.maxLength=160;
+    const err=el('div','err');const add=el('button','pri','نشر الحلم');add.style.marginTop='14px';
+    f.append(l0,fi,l1,ti,l2,pi,add,err);L.append(f);L.append(exportCard());
+    add.onclick=async()=>{err.textContent='';const file=fi.files[0],t=ti.value.trim();
+      if(!file){err.textContent='اختر صورة أولاً.';return}if(!t){err.textContent='اكتب عنواناً للحلم.';return}
+      add.disabled=true;add.textContent='جارٍ الرفع...';
+      try{const src=await shrink(file);const d={src,t,ts:serverTimestamp()};if(pi.value.trim())d.p=pi.value.trim();
+        await push(ref(db,`${B}/dreams`),d);fi.value='';ti.value='';pi.value=''}
+      catch(e){err.textContent='تعذّر الرفع. تأكد أن الملف صورة صالحة وأنك حدّثت قواعد Firebase.'}
+      add.disabled=false;add.textContent='نشر الحلم'};
+    const ids=sortedIds('dreams');
+    if(!ids.length)L.append(el('div','card empty','لا توجد أحلام مضافة بعد. تظهر في الموقع بطاقات أساسية إلى أن تضيف أحلامك.'));
+    ids.forEach(id=>{const v=data.dreams[id],c=el('div','card');
+      c.append(el('div','meta',`${v.t} • ${fmt(v.ts)}`));if(v.p)c.append(el('div','txt',v.p));
+      const im=document.createElement('img');im.className='thumb';im.src=v.src;im.alt=v.t;c.append(im);
+      const a2=el('div','act');const d=el('button','no','حذف');d.onclick=async()=>{if(await ask('حذف هذا الحلم؟'))run(()=>remove(ref(db,`${B}/dreams/${id}`)))};a2.append(d);c.append(a2);L.append(c)})}
+  function draw(){
+    if(tab==='reports')return drawReports();
+    if(tab==='messages')return drawMessages();
+    if(tab==='gallery')return drawGallery();
+    if(tab==='dreams')return drawDreams();
+    const L=$('#list');L.replaceChildren();const ids=Object.keys(data[tab]).sort((a,b)=>(data[tab][b].ts||0)-(data[tab][a].ts||0));
+    if(!ids.length){L.append(el('div','card empty','لا يوجد شيء هنا حالياً.'));return}
+    ids.forEach(id=>{const v=data[tab][id],c=el('div','card');
+      c.append(el('div','meta',tab==='voices'?`${QS[v.q]||''} • ${fmt(v.ts)}`:`${v.t} • ${v.n||'بدون لقب'} • ${fmt(v.ts)}`));
+      c.append(el('div','txt',v.x));const a=el('div','act');
+      const run=async(fn,msg)=>{try{await fn()}catch(e){ask(msg||'فشلت العملية. تأكد من الصلاحيات.',1)}};
+      if(tab==='pending'){const ok=el('button','ok','نشر على الجدار');ok.onclick=()=>run(()=>update(ref(db,B),{[`approved/${id}`]:{n:v.n||'',t:v.t,x:v.x,ts:v.ts},[`pending/${id}`]:null}));a.append(ok)}
+      if(tab==='approved'){const u=el('button','gh','إلغاء النشر');u.onclick=()=>run(()=>update(ref(db,B),{[`pending/${id}`]:{n:v.n||'',t:v.t,x:v.x,ts:v.ts},[`approved/${id}`]:null}));a.append(u)}
+      const d=el('button','no','حذف');d.onclick=async()=>{if(await ask('حذف نهائي؟'))run(()=>remove(ref(db,`${B}/${tab}/${id}`)))};a.append(d);
+      c.append(a);L.append(c)})}
+  function listen(){['pending','approved','voices','reports','messages','gallery','dreams'].forEach(k=>unsub.push(onValue(ref(db,`${B}/${k}`),s=>{data[k]=s.val()||{};drawTabs();draw()},()=>{})))}
+  onAuthStateChanged(auth,u=>{unsub.forEach(f=>f());unsub=[];
+    $('#login').hidden=!!u;$('#panel').hidden=!u;$('#out').hidden=!u;if(u)listen()});
+  $('#login').onsubmit=async e=>{e.preventDefault();$('#lerr').textContent='';
+    try{await signInWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value)}catch(x){$('#lerr').textContent='تعذّر تسجيل الدخول. تحقق من البريد وكلمة المرور.'}};
+  $('#out').onclick=()=>signOut(auth);
+}catch(e){$('#cfgwarn').textContent='تعذّر تحميل Firebase. تحقق من اتصال الإنترنت ثم أعد تحميل الصفحة.';$('#cfgwarn').hidden=false}
+</script>
+</body>
+</html>
